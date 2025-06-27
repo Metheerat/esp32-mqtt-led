@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MQTT LED Control + Status</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+  <h2>ควบคุมหลอดไฟ ESP32</h2>
+  <button onclick="turnOn()">เปิดไฟ</button>
+  <button onclick="turnOff()">ปิดไฟ</button>
+  <p>สถานะหลอดไฟ: <span id="status">ไม่ทราบ</span></p>
+
+  <script>
+    const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
+    const statusText = document.getElementById("status");
+
+    client.on("connect", () => {
+      console.log("✅ MQTT Connected");
+      // Subscribe เพื่อรอรับค่ากลับ
+      client.subscribe("esp32/led/status");
+    });
+
+    client.on("message", (topic, message) => {
+      if (topic === "esp32/led/status") {
+        const status = message.toString();
+        statusText.innerText = status === "on" ? "เปิด" : "ปิด";
+      }
+    });
+
+    function turnOn() {
+      client.publish("esp32/led", "on");
+    }
+
+    function turnOff() {
+      client.publish("esp32/led", "off");
+    }
+  </script>
+</body>
+</html>
